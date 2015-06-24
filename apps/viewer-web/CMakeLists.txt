@@ -160,12 +160,13 @@ SET(EMS_AVIDA_EMBED_DIR ../../../apps/viewer-web/config)
 # (") when fed to the shell.  Also, the list must include
 # a space between entries.
 SET(EMS_EXPORT_FUNCS
-   "\"['_main', '_empCppCallback', '_StepDriver']\""
+   "\"['_main', '_empCppCallback', '_StepDriver', '_empJSDoCallback']\""
    )
 
 # Flags specific to the web target
 SET(WEB_FLAGS
    "--js-library ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js\
+   --js-library ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js\
    -s DISABLE_EXCEPTION_CATCHING=1\
    -s COMPILER_ASSERTIONS=1\
    -s EXPORTED_FUNCTIONS=${EMS_EXPORT_FUNCS}\

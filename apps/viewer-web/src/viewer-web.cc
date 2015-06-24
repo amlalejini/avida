@@ -10,6 +10,7 @@
 #include "cWebViewerDriver.h"
 #include "avida/util/CmdLine.h"
 #include "UI/UI.h"
+#include "kinetic/Kinetic.h"
 
 namespace UI = emp::UI;
 
@@ -18,6 +19,39 @@ void StepDriver(){
    cWebViewerDriver::StepUpdate();
 }
 
+
+struct KineticDriver {
+  emp::Kinetic::Stage stage;
+  emp::Kinetic::Layer layer;
+  emp::Kinetic::Animation<KineticDriver> anim;
+  UI::ElementSlate doc;
+
+  int last_diff;
+  int last_rate;
+
+  KineticDriver() : stage(300, 300, "container"), doc(UI::Slate("emp_base2"))
+  {
+    stage.Add(layer);
+    anim.Setup(this, &KineticDriver::Drive, layer);
+    anim.Start();
+
+    doc << "<h1>NEW INTERFACE</h1>"
+	<< "Frame rate = " << UI::Live(last_rate) << "<br>"
+	<< "Time diff = " << UI::Live(last_diff) << "<br>";
+    
+    doc.Update();
+  }
+
+  void Pause() { anim.Stop(); }
+  void Start() { anim.Start(); }
+
+  void Drive(const emp::Kinetic::AnimationFrame & frame) {
+    last_diff = frame.time_diff;
+    last_rate = frame.frame_rate;
+    doc.Update();
+    StepDriver();
+  }
+};
 
 extern "C" 
 int main(int argc, char* argv[])
@@ -55,7 +89,9 @@ int main(int argc, char* argv[])
    //We're going to transfer control to the emscripten
    //event looper and let the browser set the execution
    //speed to avoid starving the rednering engine
-   emscripten_set_main_loop(StepDriver, 2, 0);
+   // emscripten_set_main_loop(StepDriver, 2, 0);
+
+   auto * d = new KineticDriver();
 
    return 0;
 }

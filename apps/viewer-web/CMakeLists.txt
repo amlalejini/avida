@@ -2,7 +2,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 INCLUDE(CMakeDependentOption)
 
-
 MESSAGE(STATUS "AVIDA WEB")
 
 
@@ -158,16 +157,27 @@ SET(EMS_AVIDA_EMBED_DIR ../../../apps/viewer-web/config)
 # A list of functions that should be exported
 # The list is fragile.  It *must* be enclosed in quotes
 # (") when fed to the shell.  Also, the list must include
-# a space between entries.
+# a comma followed by a space between entries. The names
+# of the exported functions should begin with an underscore
+# with the entire name surrounded by a single quote (e.g. ')
 SET(EMS_EXPORT_FUNCS
    "\"['_main', '_empCppCallback', '_StepDriver', '_empJSDoCallback']\""
    )
+SET(EMS_JS_LINK_LIBS
+   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js
+   ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js
+   )
+
+
+GET_PROPERTY(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+FOREACH(dir ${dirs})
+   MESSAGE(STATUS "include_dir=${dir}")
+ENDFOREACH()
+
 
 # Flags specific to the web target
 SET(WEB_FLAGS
-   "--js-library ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js\
-   --js-library ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js\
-   -s DISABLE_EXCEPTION_CATCHING=1\
+   "-s DISABLE_EXCEPTION_CATCHING=1\
    -s COMPILER_ASSERTIONS=1\
    -s EXPORTED_FUNCTIONS=${EMS_EXPORT_FUNCS}\
    -s NO_EXIT_RUNTIME=1\
@@ -184,6 +194,7 @@ SET(CMAKE_EXE_LINKER_FLAGS
      --preload-file ${EMS_AVIDA_EMBED_DIR}@/ -s ALLOW_MEMORY_GROWTH=1")
 
 
+
 #Setup the Avida-Web Target
 IF(AVD_HTML)
    ADD_EXECUTABLE(avida
@@ -191,17 +202,22 @@ IF(AVD_HTML)
                  $<TARGET_OBJECTS:apto_objs>
                  $<TARGET_OBJECTS:avida_core_objs>
                  )
-   
-
-   INSTALL_TARGETS(/work avida)
+   em_link_js_library(avida ${EMS_JS_LINK_LIBS})
 ENDIF(AVD_HTML)
 
+
+# These are the files that are either
+# (1) built by the emscripten compiler or
+# (2) are external js libraries needed for UI
 SET(BINARY_SUPPORT
    ${EXECUTABLE_OUTPUT_PATH}/avida.data
    ${EXECUTABLE_OUTPUT_PATH}/avida.html.map
    ${EXECUTABLE_OUTPUT_PATH}/avida.html.mem
    ${EXECUTABLE_OUTPUT_PATH}/avida.js
    ${PROJECT_SOURCE_DIR}/libs/empirical/UTests/UI/jquery-1.11.2.min.js
+   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js
+   ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js
+   ${CMAKE_CURRENT_SOURCE_DIR}/resources/avida.html
    )
-INSTALL(DIRECTORY resources/ DESTINATION work)
 INSTALL_FILES(/work FILES ${BINARY_SUPPORT})
+

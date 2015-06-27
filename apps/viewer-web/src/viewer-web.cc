@@ -13,6 +13,7 @@
 #include "kinetic/Kinetic.h"
 
 namespace UI = emp::UI;
+namespace Kinetic = emp::Kinetic;
 
 extern "C"
 void StepDriver(){
@@ -21,9 +22,9 @@ void StepDriver(){
 
 
 struct KineticDriver {
-  emp::Kinetic::Stage stage;
-  emp::Kinetic::Layer layer;
-  emp::Kinetic::Animation<KineticDriver> anim;
+  Kinetic::Stage stage;
+  Kinetic::Layer layer;
+  Kinetic::Animation<KineticDriver> anim;
   UI::ElementSlate doc;
 
   int last_diff;
@@ -45,7 +46,7 @@ struct KineticDriver {
   void Pause() { anim.Stop(); }
   void Start() { anim.Start(); }
 
-  void Drive(const emp::Kinetic::AnimationFrame & frame) {
+  void Drive(const Kinetic::AnimationFrame & frame) {
     last_diff = frame.time_diff;
     last_rate = frame.frame_rate;
     doc.Update();

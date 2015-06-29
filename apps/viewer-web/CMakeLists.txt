@@ -161,11 +161,11 @@ SET(EMS_AVIDA_EMBED_DIR ../../../apps/viewer-web/config)
 # of the exported functions should begin with an underscore
 # with the entire name surrounded by a single quote (e.g. ')
 SET(EMS_EXPORT_FUNCS
-   "\"['_main', '_empCppCallback', '_StepDriver', '_empJSDoCallback']\""
+   "\"['_main', '_empCppCallback', '_StepDriver']\""
    )
 SET(EMS_JS_LINK_LIBS
-   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js
-   ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js
+   "${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js"
+   "${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js"
    )
 
 
@@ -182,7 +182,7 @@ SET(WEB_FLAGS
    -s EXPORTED_FUNCTIONS=${EMS_EXPORT_FUNCS}\
    -s NO_EXIT_RUNTIME=1\
    -s DEMANGLE_SUPPORT=1\
-   -DDEBUG "
+   -DDEBUG" 
    )
 
 SET(OFLAGS_WEB 
@@ -191,8 +191,8 @@ SET(CMAKE_CXX_FLAGS_RELEASE "")
 SET(CMAKE_CXX_FLAGS "${OFLAGS_WEB} ${WEB_FLAGS} -std=c++11 -Wno-unused-function")
 SET(CMAKE_EXE_LINKER_FLAGS 
      "${CMAKE_EXE_LINKER_FLAGS}\
-     --preload-file ${EMS_AVIDA_EMBED_DIR}@/ -s ALLOW_MEMORY_GROWTH=1")
-
+     --preload-file ${EMS_AVIDA_EMBED_DIR}@/ -s ALLOW_MEMORY_GROWTH=1"
+   )
 
 
 #Setup the Avida-Web Target
@@ -202,7 +202,7 @@ IF(AVD_HTML)
                  $<TARGET_OBJECTS:apto_objs>
                  $<TARGET_OBJECTS:avida_core_objs>
                  )
-   em_link_js_library(avida ${EMS_JS_LINK_LIBS})
+   em_link_js_library(avida "${EMS_JS_LINK_LIBS}")
 ENDIF(AVD_HTML)
 
 
@@ -215,8 +215,7 @@ SET(BINARY_SUPPORT
    ${EXECUTABLE_OUTPUT_PATH}/avida.html.mem
    ${EXECUTABLE_OUTPUT_PATH}/avida.js
    ${PROJECT_SOURCE_DIR}/libs/empirical/UTests/UI/jquery-1.11.2.min.js
-   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js
-   ${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js
+   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/kinetic-v5.1.0.min.js
    ${CMAKE_CURRENT_SOURCE_DIR}/resources/avida.html
    )
 INSTALL_FILES(/work FILES ${BINARY_SUPPORT})

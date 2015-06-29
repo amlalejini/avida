@@ -9,8 +9,8 @@
 #include "cWorld.h"
 #include "cWebViewerDriver.h"
 #include "avida/util/CmdLine.h"
-#include "UI/UI.h"
 #include "kinetic/Kinetic.h"
+#include "UI/UI.h"
 
 namespace UI = emp::UI;
 namespace Kinetic = emp::Kinetic;
@@ -22,6 +22,7 @@ void StepDriver(){
 
 
 struct KineticDriver {
+   
   Kinetic::Stage stage;
   Kinetic::Layer layer;
   Kinetic::Animation<KineticDriver> anim;
@@ -29,7 +30,6 @@ struct KineticDriver {
 
   int last_diff;
   int last_rate;
-
   KineticDriver() : stage(300, 300, "container"), doc(UI::Slate("emp_base2"))
   {
     stage.Add(layer);

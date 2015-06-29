@@ -117,16 +117,16 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 
 
 # Locate Empirical's Headers
-SET(EMPIRICAL_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/libs/empirical)
+SET(EMPIRICAL_DIR ${PROJECT_SOURCE_DIR}/libs/empirical)
 
 # Locate apto's headers
 SET(APTO_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/libs/apto/include)
 
 
 INCLUDE_DIRECTORIES(
-   ${EMPIRICAL_INCLUDE_DIR}
    ${AVIDA_INCLUDES}
    ${APTO_INCLUDE_DIR}
+   ${EMPIRICAL_DIR}
    )
 
 
@@ -161,11 +161,11 @@ SET(EMS_AVIDA_EMBED_DIR ../../../apps/viewer-web/config)
 # of the exported functions should begin with an underscore
 # with the entire name surrounded by a single quote (e.g. ')
 SET(EMS_EXPORT_FUNCS
-   "\"['_main', '_empCppCallback', '_StepDriver']\""
+   "\"['_main', '_empCppCallback', '_empJSDoCallback', '_StepDriver']\""
    )
-SET(EMS_JS_LINK_LIBS
-   "${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/library_kinetic.js"
-   "${PROJECT_SOURCE_DIR}/libs/empirical/emtools/library_emp.js"
+SET(EMS_JS_LINK_LIBS 
+   ${EMPIRICAL_DIR}/emtools/library_emp.js
+   ${EMPIRICAL_DIR}/kinetic/library_kinetic.js
    )
 
 
@@ -182,7 +182,8 @@ SET(WEB_FLAGS
    -s EXPORTED_FUNCTIONS=${EMS_EXPORT_FUNCS}\
    -s NO_EXIT_RUNTIME=1\
    -s DEMANGLE_SUPPORT=1\
-   -DDEBUG" 
+   -DDEBUG\
+   -v" 
    )
 
 SET(OFLAGS_WEB 
@@ -202,7 +203,7 @@ IF(AVD_HTML)
                  $<TARGET_OBJECTS:apto_objs>
                  $<TARGET_OBJECTS:avida_core_objs>
                  )
-   em_link_js_library(avida "${EMS_JS_LINK_LIBS}")
+   em_link_js_library(avida ${EMS_JS_LINK_LIBS})
 ENDIF(AVD_HTML)
 
 
@@ -214,8 +215,8 @@ SET(BINARY_SUPPORT
    ${EXECUTABLE_OUTPUT_PATH}/avida.html.map
    ${EXECUTABLE_OUTPUT_PATH}/avida.html.mem
    ${EXECUTABLE_OUTPUT_PATH}/avida.js
-   ${PROJECT_SOURCE_DIR}/libs/empirical/UTests/UI/jquery-1.11.2.min.js
-   ${PROJECT_SOURCE_DIR}/libs/empirical/kinetic/kinetic-v5.1.0.min.js
+   ${EMPIRICAL_DIR}/UTests/UI/jquery-1.11.2.min.js
+   ${EMPIRICAL_DIR}/kinetic/kinetic-v5.1.0.min.js
    ${CMAKE_CURRENT_SOURCE_DIR}/resources/avida.html
    )
 INSTALL_FILES(/work FILES ${BINARY_SUPPORT})

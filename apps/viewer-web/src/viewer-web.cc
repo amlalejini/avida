@@ -11,6 +11,7 @@
 #include "avida/util/CmdLine.h"
 #include "kinetic/Kinetic.h"
 #include "UI/UI.h"
+#include "tools/callbacks.h"
 
 namespace UI = emp::UI;
 namespace Kinetic = emp::Kinetic;

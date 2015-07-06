@@ -192,7 +192,9 @@ SET(CMAKE_CXX_FLAGS_RELEASE "")
 SET(CMAKE_CXX_FLAGS "${OFLAGS_WEB} ${WEB_FLAGS} -std=c++11 -Wno-unused-function")
 SET(CMAKE_EXE_LINKER_FLAGS 
      "${CMAKE_EXE_LINKER_FLAGS}\
-     --preload-file ${EMS_AVIDA_EMBED_DIR}@/ -s ALLOW_MEMORY_GROWTH=1"
+     --preload-file ${EMS_AVIDA_EMBED_DIR}@/ -s ALLOW_MEMORY_GROWTH=1 \
+     --post-js ${EMPIRICAL_DIR}/kinetic/library_kinetic.js \
+     --post-js ${EMPIRICAL_DIR}/emtools/library_emp.js"
    )
 
 
@@ -203,7 +205,7 @@ IF(AVD_HTML)
                  $<TARGET_OBJECTS:apto_objs>
                  $<TARGET_OBJECTS:avida_core_objs>
                  )
-   em_link_js_library(avida ${EMS_JS_LINK_LIBS})
+              #em_link_js_library(avida ${EMS_JS_LINK_LIBS})
 ENDIF(AVD_HTML)
 
 

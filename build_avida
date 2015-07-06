@@ -91,6 +91,7 @@ make -j 10 install
 # configuration files and pre-load them into the virtual file system.
 # This post-processing applies to avida.html only at this time.
 if [ $? -eq 0 ] && [ "$1" == "avida.html" ]; then 
+   echo "Kludging virtual file system."
    avida_js="work/avida.js"
    sed -i '' "s:\.\.\/\.\.\/bin\/avida.data:/avida.data:g" "${avida_js}" 
 fi

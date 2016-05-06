@@ -1406,85 +1406,70 @@ bool cPopulation::ActivateOrganism(cAvidaContext& ctx, cOrganism* in_organism, c
   // restrict stepping stones to plasticity if requested @amlalejini
   int r_stones = m_world->GetConfig().RESTRICT_PLASTICITY_STEPPING_STONES.Get();
   if (r_stones) {
-    cout << "MODE: " << r_stones << endl;
     // @amlalejini: Here is where I plan to kill organisms touching restricted stones.
-    // 1. Store original values
-    cout << "==== ACTIVATE ====" << endl;
-    // Make list to store current reaction values
-    //    - Store original state of tasks for this environment
-    vector<double> react_vals; //TODO: make cur_react_vals
-    vector<double> alt_react_vals;
-    vector<cString> react_names;
-    for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      react_names.push_back(m_world->GetEnvironment().GetReactionName(i));
-      react_vals.push_back(m_world->GetEnvironment().GetReactionValue(i));
-    }
-    // 2. Test in current environment
-    // Test the organism
-    cout << " - Testing in current environment - " << endl;
-    cCPUTestInfo cur_test_info;
-    cCPUTestInfo alt_test_info;
+    vector<double> cur_react_vals;  // Reaction values for current environment
+    vector<double> alt_react_vals;  // Reaction values for alternative environment
+    vector<cString> react_names;    // Reaction names
+    // Setup a test CPU
+    cCPUTestInfo cur_test_info;     // Test info for current environment
+    cCPUTestInfo alt_test_info;     // Test info for alternative environment
     cTestCPU* test_cpu = m_world->GetHardwareManager().CreateTestCPU(ctx);
     cur_test_info.UseManualInputs(target_cell.GetInputs()); // Test using what the environment will be
     alt_test_info.UseManualInputs(target_cell.GetInputs());
     Genome mg(in_organism->GetGenome().HardwareType(),
               in_organism->GetGenome().Properties(),
               GeneticRepresentationPtr(new InstructionSequence(in_organism->GetHardware().GetMemory())));
-    test_cpu->TestGenome(ctx, cur_test_info, mg);  // Use the true genome
+    // Sample the current environemnt (What are the current reaction values?)
+    for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
+      react_names.push_back(m_world->GetEnvironment().GetReactionName(i));
+      cur_react_vals.push_back(m_world->GetEnvironment().GetReactionValue(i));
+    }
+    // Test the genome in the current environment
+    test_cpu->TestGenome(ctx, cur_test_info, mg);
     // How did it do?
     Apto::Array<int> cur_env_react_cnt = cur_test_info.GetTestPhenotype().GetLastReactionCount();
+    // Change environment (Multiply all reaction values by -1)
     for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      cout << "Reaction " << react_names[i] << ": " << react_vals[i] << endl;
-      cout << "    React cnt: " << cur_env_react_cnt[i] << endl;
-    }
-    cout << "Bonus: " << cur_test_info.GetTestPhenotype().GetLastBonus() << endl;
-    cout << "Genome as string: " << cur_test_info.GetTestOrganism()->GetGenome().AsString() << endl;
-
-    // 3. Change environment (invert it!)
-    for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      m_world->GetEnvironment().SetReactionValue(ctx, react_names[i], react_vals[i] * -1);
+      m_world->GetEnvironment().SetReactionValue(ctx, react_names[i], cur_react_vals[i] * -1);
       alt_react_vals.push_back(m_world->GetEnvironment().GetReactionValue(i));
     }
-    /////////////////////////////
-    cout << " - Testing in alternative environment - " << endl;
+    // Test the genome in the alternative environment
     test_cpu->TestGenome(ctx, alt_test_info, mg);
-    delete test_cpu;
+    delete test_cpu; // we're done using the test cpu, toss it
+    // How did it go?
     Apto::Array<int> alt_env_react_cnt = alt_test_info.GetTestPhenotype().GetLastReactionCount();
+    // Let's reset the environment.
     for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      cout << "Reaction " << react_names[i] << ": " << alt_react_vals[i] << endl;
-      cout << "    React cnt: " << alt_env_react_cnt[i] << endl;
+      m_world->GetEnvironment().SetReactionValue(ctx, react_names[i], cur_react_vals[i]);
     }
-    cout << "Bonus: " << alt_test_info.GetTestPhenotype().GetLastBonus() << endl;
-    cout << "Genome as string: " << alt_test_info.GetTestOrganism()->GetGenome().AsString() << endl;
-
-    // 6. Change environment (back to original)
-    cout << " - Changing environment back - " << endl;
-    for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      m_world->GetEnvironment().SetReactionValue(ctx, react_names[i], react_vals[i] * -1);
-      cout << "Reaction " << react_names[i] << ": " << react_vals[i] << endl;
-    }
-    // 7. Compare task profiles & respond accordingly
-    //    - if (profile same in both environments): unconditional performer
-    //    - if (profile different in both environments): conditional performer
-    //      - if (only rewarded tasks performed): optimal
-    //      - otherwise: sub-optimal
-    vector<int> react_states; // 0: unconditional, 1: sub-opt conditional, 2: opt conditional
+    /////////////////////////////////////////////////////
+    // Debug code
+    ////////////////////////////////////////////////////
+    // for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
+    //   cout << "Reaction " << react_names[i] << ": " << endl;
+    //   cout << "  Current Values: " << cur_react_vals[i] << endl;
+    //   cout << "  Alt Values:     " << alt_react_vals[i] << endl;
+    //   cout << "  Current React cnt: " << cur_env_react_cnt[i] << endl;
+    //   cout << "  Alt React cnt:     " << alt_env_react_cnt[i] << endl;
+    // }
+    // cout << "Bonus: " << cur_test_info.GetTestPhenotype().GetLastBonus() << endl;
+    // cout << "Genome as string: " << cur_test_info.GetTestOrganism()->GetGenome().AsString() << endl;
+    //////////////////////////////////////////////////////
     bool all_uncon = true;
     bool all_opt = true;
     for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
       // check for conditionality (if so, flag all_uncon false)
       if (cur_env_react_cnt[i] != alt_env_react_cnt[i]) all_uncon = false;
       // check for optimality (if not, flag all_opt false)
-      bool cur_opt = (react_vals[i] > 0 && cur_env_react_cnt[i] > 0)
-                  || (react_vals[i] < 0 && cur_env_react_cnt[i] == 0)
-                  || (react_vals[i] == 0);
+      bool cur_opt = (cur_react_vals[i] > 0 && cur_env_react_cnt[i] > 0)
+                  || (cur_react_vals[i] < 0 && cur_env_react_cnt[i] == 0)
+                  || (cur_react_vals[i] == 0);
       bool alt_opt = (alt_react_vals[i] > 0 && alt_env_react_cnt[i] > 0)
                   || (alt_react_vals[i] < 0 && alt_env_react_cnt[i] == 0)
                   || (alt_react_vals[i] == 0);
-      cout << "CUR OPT: " << cur_opt << "; ALT OPT: " << alt_opt << endl;
       if (!(cur_opt && alt_opt)) all_opt = false;
     }
-    // handle each case
+    // How are we restricting stepping stones? Handle each case responsibly.
     if (r_stones == 1) {
       // No unconditional phenotypes allowed
       if (all_uncon && !is_inject) {
@@ -1504,15 +1489,7 @@ bool cPopulation::ActivateOrganism(cAvidaContext& ctx, cOrganism* in_organism, c
         org_survived = false;
       }
     }
-    if (all_opt) {
-      cout << "Optimality!" << endl;
-    } else if (all_uncon) {
-      cout << "Unconditional!" << endl;
-    } else {
-      cout << "Must be sub-optimally conditional!" << endl;
-    }
   } // end restrict stepping stones code @amlalejini
-
 
   return org_survived;
 }

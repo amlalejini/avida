@@ -1455,11 +1455,14 @@ bool cPopulation::ActivateOrganism(cAvidaContext& ctx, cOrganism* in_organism, c
     // cout << "Bonus: " << cur_test_info.GetTestPhenotype().GetLastBonus() << endl;
     // cout << "Genome as string: " << cur_test_info.GetTestOrganism()->GetGenome().AsString() << endl;
     //////////////////////////////////////////////////////
-    bool all_uncon = true;
-    bool all_opt = true;
+    bool plastic = false;     // true if any task at all is plastic
+    bool uncon_react = false; // true if any task at all is unconditionally performed
+    bool suboptimal = false;  // true if any task at all is sub-optimally plastic
     for (int i = 0; i < m_world->GetEnvironment().GetNumReactions(); i++) {
-      // check for conditionality (if so, flag all_uncon false)
-      if (cur_env_react_cnt[i] != alt_env_react_cnt[i]) all_uncon = false;
+      // if diff reaction counts in diff environments, organism must be plastic on something
+      if (cur_env_react_cnt[i] != alt_env_react_cnt[i]) plastic = true;
+      // if same reaction counts in different environments (excluding when organism does nothing), organism has unconditional task
+      if ((cur_env_react_cnt[i] == alt_env_react_cnt[i]) && !(cur_env_react_cnt[i] == 0 && alt_env_react_cnt[i] == 0)) uncon_react = true;
       // check for optimality (if not, flag all_opt false)
       bool cur_opt = (cur_react_vals[i] > 0 && cur_env_react_cnt[i] > 0)
                   || (cur_react_vals[i] < 0 && cur_env_react_cnt[i] == 0)
@@ -1467,24 +1470,24 @@ bool cPopulation::ActivateOrganism(cAvidaContext& ctx, cOrganism* in_organism, c
       bool alt_opt = (alt_react_vals[i] > 0 && alt_env_react_cnt[i] > 0)
                   || (alt_react_vals[i] < 0 && alt_env_react_cnt[i] == 0)
                   || (alt_react_vals[i] == 0);
-      if (!(cur_opt && alt_opt)) all_opt = false;
+      if (!(cur_opt && alt_opt)) suboptimal = true;
     }
     // How are we restricting stepping stones? Handle each case responsibly.
     if (r_stones == 1) {
       // No unconditional phenotypes allowed
-      if (all_uncon && !is_inject) {
+      if (uncon_react && !is_inject) {
         KillOrganism(target_cell, ctx);
         org_survived = false;
       }
     } else if (r_stones == 2) {
-      // No sub-optimally plastic phenotypes allowed
-      if ((!all_opt || !all_uncon) && !is_inject) {
+      // No sub-optimally plastic phenotypes allowed -- if you're plastic, you must be optimal
+      if ((plastic && suboptimal) && !is_inject) {
         KillOrganism(target_cell, ctx);
         org_survived = false;
       }
     } else if (r_stones == 3) {
       // No unconditional or sub-optimally plastic phenotypes allowed
-      if (!all_opt && !is_inject) {
+      if ((uncon_react || (plastic && suboptimal)) && !is_inject) {
         KillOrganism(target_cell, ctx);
         org_survived = false;
       }

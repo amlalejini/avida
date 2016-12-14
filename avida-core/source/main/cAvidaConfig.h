@@ -870,6 +870,9 @@ public:
   // -------- Evolutionary Origins of Phenotypic Plasticity --------
   CONFIG_ADD_GROUP(ORIGINS_OF_PHENOTYPIC_PLASTICITY_GROUP, "Settings specifically for origins of phenotypic plasticity work.");
   CONFIG_ADD_VAR(RESTRICT_PLASTICITY_STEPPING_STONES, int, 0, "0 = No restrictions\n1 = No unconditional phenotypes\n2 = No sub-optimally conditional phenotypes\n3 = 1 & 2");
+  // --------- Reaction Sensing --------------------
+  CONFIG_ADD_GROUP(REACTION_SENSING_GROUP, "Reaction Sensing Settings");
+  CONFIG_ADD_VAR(BLIND_REACTION_SENSORS, bool, 0, "Set to blind sense-react-X instructions (turn them into nops).");
 
   // -------- DEPRECATED ---------
   CONFIG_ADD_GROUP(DEPRECATED_GROUP, "DEPRECATED (New functionality listed in comments)");
